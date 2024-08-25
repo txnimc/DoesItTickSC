@@ -17,9 +17,6 @@
 	"entrypoints": {
 		"main": [
 			"${group}.${namespace}.${name}"
-		],
-		"client": [
-			"${group}.${namespace}.${name}"
 		]
 	},
 	"mixins": [

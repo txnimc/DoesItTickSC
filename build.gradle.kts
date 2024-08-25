@@ -3,19 +3,24 @@ val settings = object : TxniTemplateSettings {
 	// -------------------- Dependencies ---------------------- //
 	override val depsHandler: DependencyHandler get() = object : DependencyHandler {
 		override fun addGlobal(deps: DependencyHandlerScope) {
-
+			deps.modImplementation("curse.maven:open-parties-and-claims-636608:${property("deps.opac")}")
+			deps.modRuntimeOnly("curse.maven:architectury-api-419699:${property("deps.architectury")}")
 		}
 
 		override fun addFabric(deps: DependencyHandlerScope) {
-
+			deps.modImplementation("curse.maven:ftb-chunks-fabric-472657:${property("deps.ftbchunks")}")
+			deps.modImplementation("curse.maven:ftb-library-fabric-438495:${property("deps.ftblib")}")
+			deps.modRuntimeOnly("curse.maven:ftb-teams-fabric-438497:${property("deps.ftbteams")}")
 		}
 
 		override fun addForge(deps: DependencyHandlerScope) {
-
+			deps.modImplementation("curse.maven:ftb-chunks-forge-314906:${property("deps.ftbchunks")}")
+			deps.modImplementation("curse.maven:ftb-library-forge-404465:${property("deps.ftblib")}")
+			deps.modRuntimeOnly("curse.maven:ftb-teams-forge-404468:${property("deps.ftbteams")}")
 		}
 
 		override fun addNeo(deps: DependencyHandlerScope) {
-
+			addForge(deps)
 		}
 	}
 
@@ -125,8 +130,6 @@ dependencies {
 	settings.depsHandler.addGlobal(this)
 
 	if (isFabric) {
-		modRuntimeOnly("maven.modrinth:sodium:mc1.21-0.6.0-beta.1-fabric")
-
 		settings.depsHandler.addFabric(this)
 		modImplementation("net.fabricmc.fabric-api:fabric-api:${property("deps.fapi")}")
 		modImplementation("net.fabricmc:fabric-loader:${property("deps.fabric_loader")}")
@@ -144,8 +147,6 @@ dependencies {
 	}
 
 	if (isNeo) {
-		modRuntimeOnly("maven.modrinth:sodium:mc1.21-0.6.0-beta.1-neoforge")
-
 		settings.depsHandler.addNeo(this)
 		"neoForge"("net.neoforged:neoforge:${property("deps.fml")}")
 	}
@@ -207,7 +208,7 @@ project.tasks.register("setupManifoldPreprocessors") {
 tasks.setupChiseledBuild { finalizedBy("setupManifoldPreprocessors") }
 
 tasks.register<RenameExampleMod>("renameExampleMod", rootDir, mod.id, mod.name, mod.displayName, mod.namespace, mod.group).configure {
-	group = "build helpers"
+	group = "toni"
 	description = "Renames the example mod to match the mod ID, name, and display name in gradle.properties"
 }
 
