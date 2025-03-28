@@ -7,7 +7,7 @@ issueTrackerURL = "https://github.com/${github}/${name}/issues"
 
 [[mods]]
 modId="${id}"
-version="${version}"
+version="${modversion}"
 displayName="${display_name}"
 authors="${author}"
 description="${description}"
@@ -15,7 +15,7 @@ logoFile="assets/${namespace}/textures/mod_logo.png"
 displayURL = "https://github.com/${github}/${name}/"
 
 [[mixins]]
-config = "mixins.${id}.json"
+config = "mixins.${mixinid}.json"
 
 [[dependencies."${id}"]]
 modId="minecraft"
@@ -23,3 +23,5 @@ mandatory=true
 versionRange="${mc}"
 ordering="NONE"
 side="BOTH"
+
+${depends}

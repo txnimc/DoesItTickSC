@@ -1,5 +1,3 @@
-import dev.kikugie.stonecutter.StonecutterSettings
-
 pluginManagement {
 	repositories {
 		mavenCentral()
@@ -10,25 +8,23 @@ pluginManagement {
 		maven("https://maven.neoforged.net/releases/")
 		maven("https://maven.kikugie.dev/snapshots")
 		maven("https://maven.kikugie.dev/releases")
+		maven("https://maven.txni.dev/releases")
 	}
 }
 
 plugins {
-	id("dev.kikugie.stonecutter") version "0.5-alpha.4"
+	id("dev.architectury.loom") version "1.9-SNAPSHOT" apply false
+	kotlin("jvm") version "2.0.0" apply false
+	kotlin("plugin.serialization") version "2.0.0" apply false
+	id("toni.blahaj") version "2.0.8"
+	id("dev.kikugie.stonecutter") version "0.6-alpha.5"
 }
 
-extensions.configure<StonecutterSettings> {
-	kotlinController = true
-	centralScript = "build.gradle.kts"
-	shared {
-		fun mc(version: String, vararg loaders: String) {
-			for (it in loaders) vers("$version-$it", version)
-		}
-
-		mc("1.20.1", "fabric" , "forge")
-		mc("1.21.1", "fabric" , "neoforge")
+blahaj {
+	init(rootProject) {
+		mc("1.20.1", "fabric", "forge")
+		mc("1.21.1", "fabric", "neoforge")
 	}
-	create(rootProject)
 }
 
-rootProject.name = "DoesItTick"
+rootProject.name = settings.extra["mod.name"] as String

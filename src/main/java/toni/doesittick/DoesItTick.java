@@ -5,9 +5,11 @@ import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
+import net.minecraft.world.entity.item.FallingBlockEntity;
 import net.minecraft.world.entity.monster.Monster;
 import net.minecraft.world.entity.monster.Slime;
-import net.minecraft.world.level.block.Fallable;
+import net.minecraft.world.level.ChunkPos;
+import toni.chunkactivitytracker.ChunkActivityTracker;
 import toni.doesittick.api.Tickable;
 import toni.doesittick.integration.FTBChunkClaimProvider;
 import toni.doesittick.integration.IChunkClaimProvider;
@@ -26,6 +28,8 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.level.Level;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import toni.lib.utils.PlatformUtils;
+
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ThreadLocalRandom;
@@ -112,7 +116,7 @@ public class DoesItTick #if FABRIC implements ModInitializer #endif{
 
     public static final #if current_20_1 ForgeConfigSpec #else ModConfigSpec #endif COMMON_CONFIG;
     public static final IntValue LIVING_HORIZONTAL_TICK_DIST, LIVING_VERTICAL_TICK_DIST;
-    public static final BooleanValue OPTIMIZE_ITEM_MOVEMENT, IGNORE_DEAD_ENTITIES, IGNORE_HOSTILE_ENTITIES, IGNORE_PASSIVE_ENTITIES, TICKING_RAIDER_ENTITIES_IN_RAID, OPTIMIZE_ENTITIES_TICKING, SEND_MESSAGE;
+    public static final BooleanValue DISABLE_ON_CLIENT, DISABLE_IN_ACTIVE_CHUNKS, OPTIMIZE_ITEM_MOVEMENT, IGNORE_DEAD_ENTITIES, IGNORE_HOSTILE_ENTITIES, IGNORE_PASSIVE_ENTITIES, TICKING_RAIDER_ENTITIES_IN_RAID, OPTIMIZE_ENTITIES_TICKING, SEND_MESSAGE;
     public static final ConfigValue<List<? extends String>> ENTITIES_WHITELIST, ITEMS_WHITELIST, ENTITIES_MOD_ID_WHITELIST, RAID_ENTITIES_WHITELIST, RAID_ENTITIES_MOD_ID_LIST, DIMENSION_WHITELIST;
 
     static {
@@ -135,7 +139,7 @@ public class DoesItTick #if FABRIC implements ModInitializer #endif{
         });
 
         Builder builder = new Builder();
-        builder.comment("DoesPotatoTick?").push("Living Entities Tick Settings");
+        builder.comment("Does It Tick?").push("Living Entities Tick Settings");
         OPTIMIZE_ENTITIES_TICKING = builder.comment("If you disable this, entities will not stop ticking when they'are far from you, this mod may be useless for you too").define("OptimizeEntitiesTicking", true);
         LIVING_HORIZONTAL_TICK_DIST = builder.defineInRange("LivingEntitiesMaxHorizontalTickDistance", 64, 1, Integer.MAX_VALUE);
         LIVING_VERTICAL_TICK_DIST = builder.defineInRange("LivingEntitiesMaxVerticalTickDistance", 32, 1, Integer.MAX_VALUE);
@@ -154,7 +158,9 @@ public class DoesItTick #if FABRIC implements ModInitializer #endif{
         ITEMS_WHITELIST = builder.comment("If you don't want to let a specific item entity in the world to be effected by the optimization, you can write its registry name down here.", "Require 'OptimizeItemMovement' to be true").defineList("ItemWhiteList", itemList, Predicates.alwaysTrue());
         builder.pop();
         builder.push("Misc");
+        DISABLE_ON_CLIENT = builder.define("DisableOnClient", true);
         SEND_MESSAGE = builder.define("SendWarningMessageWhenPlayerLogIn", true);
+        DISABLE_IN_ACTIVE_CHUNKS = builder.comment("If you disable this, entities near player bases may be affected.").define("DisableInActiveChunks", true);
         builder.pop();
         COMMON_CONFIG = builder.build();
     }
@@ -188,41 +194,41 @@ public class DoesItTick #if FABRIC implements ModInitializer #endif{
             #endif
         #endif
 
-        #if forge
-        MinecraftForge.EVENT_BUS.addListener((PlayerEvent.PlayerLoggedInEvent event) -> {
-            if (!SEND_MESSAGE.get()) return;
-            if (IS_FTB_CHUNKS_PRESENT) {
-                event.getEntity().displayClientMessage(Component.translatable("doesittick.warn.1"), false);
-            } else {
-                event.getEntity().displayClientMessage(Component.translatable("doesittick.warn.2"), false);
-            }
-        });
-        #endif
+//        #if forge
+//        MinecraftForge.EVENT_BUS.addListener((PlayerEvent.PlayerLoggedInEvent event) -> {
+//            if (!SEND_MESSAGE.get()) return;
+//            if (IS_FTB_CHUNKS_PRESENT) {
+//                event.getEntity().displayClientMessage(Component.translatable("doesittick.warn.1"), false);
+//            } else {
+//                event.getEntity().displayClientMessage(Component.translatable("doesittick.warn.2"), false);
+//            }
+//        });
+//        #endif
     }
 
     #if FABRIC @Override #endif
     public void onInitialize() {
-        #if forge
-        for (EntityType<?> entityType : ForgeRegistries.ENTITY_TYPES) {
-            ResourceLocation id = ForgeRegistries.ENTITY_TYPES.getKey(entityType);
-            applyWhitelist(id, entityType);
-        }
-        #else
-        BuiltInRegistries.ENTITY_TYPE.entrySet().forEach(kvp -> {
-            applyWhitelist(kvp.getKey().location(), kvp.getValue());
-        });
-        #endif
+//        #if forge
+//        for (EntityType<?> entityType : ForgeRegistries.ENTITY_TYPES) {
+//            ResourceLocation id = ForgeRegistries.ENTITY_TYPES.getKey(entityType);
+//            applyWhitelist(id, entityType);
+//        }
+//        #else
+//        BuiltInRegistries.ENTITY_TYPE.entrySet().forEach(kvp -> {
+//            applyWhitelist(kvp.getKey().location(), kvp.getValue());
+//        });
+//        #endif
     }
-
-    private void applyWhitelist(ResourceLocation id, EntityType<?> entityType) {
-        if (id != null) {
-            if (ENTITIES_WHITELIST.get().contains(id.toString()) || ENTITIES_MOD_ID_WHITELIST.get().contains(id.getNamespace()))
-                ((Tickable.EntityType)entityType).doespotatotick$setShouldAlwaysTick();
-
-            if (RAID_ENTITIES_WHITELIST.get().contains(id.toString()) || RAID_ENTITIES_MOD_ID_LIST.get().contains(id.getNamespace()))
-                ((Tickable.EntityType)entityType).doespotatotick$setShouldAlwaysTickInRaid();
-        }
-    }
+//
+//    private void applyWhitelist(ResourceLocation id, EntityType<?> entityType) {
+//        if (id != null) {
+//            if (ENTITIES_WHITELIST.get().contains(id.toString()) || ENTITIES_MOD_ID_WHITELIST.get().contains(id.getNamespace()))
+//                ((Tickable.EntityType)entityType).doespotatotick$setShouldAlwaysTick();
+//
+//            if (RAID_ENTITIES_WHITELIST.get().contains(id.toString()) || RAID_ENTITIES_MOD_ID_LIST.get().contains(id.getNamespace()))
+//                ((Tickable.EntityType)entityType).doespotatotick$setShouldAlwaysTickInRaid();
+//        }
+//    }
 
     // Forg event stubs to call the Fabric initialize methods, and set up cloth config screen
     #if FORGELIKE
@@ -230,6 +236,9 @@ public class DoesItTick #if FABRIC implements ModInitializer #endif{
     #endif
 
     public static boolean isTickable(@NotNull Entity entity) {
+        if (entity instanceof Player)
+            return true;
+
         if (!OPTIMIZE_ENTITIES_TICKING.get())
             return true;
 
@@ -237,8 +246,22 @@ public class DoesItTick #if FABRIC implements ModInitializer #endif{
         if (!isOptimizableDim(level))
             return true;
 
-        if (entity instanceof Fallable)
+        if (DISABLE_ON_CLIENT.get() && level.isClientSide)
             return true;
+
+        if (entity instanceof FallingBlockEntity)
+            return true;
+
+        if (DISABLE_IN_ACTIVE_CHUNKS.get()) {
+            var chunkPos = entity.chunkPosition();
+            for (int x = -2; x < 2; x++) {
+                for (int z = -2; z < 2; z++) {
+                    var secondsInChunk = ChunkActivityTracker.getTotalTimeInChunk(level, new ChunkPos(chunkPos.x + x, chunkPos.z + z));
+                    if (secondsInChunk > 15)
+                        return true;
+                }
+            }
+        }
 
         if (entity instanceof LivingEntity) {
             if (!IGNORE_DEAD_ENTITIES.get() && ((LivingEntity) entity).isDeadOrDying())
